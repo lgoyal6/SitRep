@@ -58,6 +58,48 @@ commits on `main` are mine. The pieces I owned:
 | Tests | Vitest for unit and integration, Playwright with Chromium for end to end |
 | CI | GitHub Actions, with ESLint and Prettier |
 
+## How it holds together
+
+### A request, end to end
+
+```mermaid
+flowchart TD
+  B["Page module under source/<br/>apiFetch, sends the sitrep_token cookie"]
+  B -->|"page load"| S["Static file from dist/<br/>index.html plus source/, copied by npm run build"]
+  B -->|"/api/..."| M1["functions/_middleware.js<br/>cookie to sessions row to context.data.userId, or null"]
+  M1 --> M2{"under /api/projects/:projectId/ ?"}
+  M2 -->|no| H["Route handler<br/>routes outside the subtree call<br/>the _auth.js guards themselves"]
+  M2 -->|"yes, and POST /members"| H
+  M2 -->|"yes, anything else"| M3["Scoped middleware: requireProjectMember<br/>401, 403 or 400 before the handler runs"]
+  M3 --> H
+  H --> D[("D1, via env.DB")]
+
+  style M1 fill:#12313f,stroke:#38bdf8,color:#eaf6fb
+  style M3 fill:#12313f,stroke:#38bdf8,color:#eaf6fb
+```
+
+The cookie is resolved once, at the root, into `context.data.userId`; Pages shares the `data` object down the chain, so a property set on `context` itself would not survive. Membership is enforced once for the whole `/api/projects/:projectId/` subtree in a second middleware, which means a route added under that path is guarded by default rather than by remembering to call the helper. The single carve-out is `POST /members`, because an invited user calls it before they are a member.
+
+### Who may review an agent's work
+
+```mermaid
+flowchart TD
+  A["POST /api/projects/:projectId/tasks<br/>or PATCH /api/tasks/:taskId"] --> B["classifyUser assigned_to:<br/>is there an agents row for them?"]
+  B -->|"agent"| C{"reviewer_id supplied?"}
+  C -->|no| E2["default to the agent's owner_user_id<br/>400 if the agent has none"]
+  C -->|yes| E["classifyUser reviewer_id"]
+  E2 --> E
+  B -->|"human"| F{"reviewer_id supplied?"}
+  F -->|yes| E
+  F -->|no| Z["review_status stays not-required"]
+  E -->|"agent, or unknown user"| X["400: reviewer_id must<br/>reference a non-agent user"]
+  E -->|"human"| Y["accepted, and an agent-assigned task<br/>never stays at not-required"]
+
+  style X fill:#3d1418,stroke:#f87171,color:#fdecec
+```
+
+`classifyUser` decides human against agent on the presence of an `agents` row, not on a nullable owner column, so bad data cannot make a bot look like a person. Both the create and the update path run the same check, which is what stops an agent from signing off on its own work or on another agent's.
+
 ## Run it locally
 
 ```bash
@@ -75,6 +117,12 @@ npx playwright test        # end to end, Chromium
 npm run lint
 npm run format:check
 ```
+
+## Deploying it
+
+Cloudflare Pages, configured entirely by `wrangler.toml`: Pages project `cse110-sp26-group15`, build output `dist/`, `nodejs_compat` on, and one D1 binding called `DB`, which is the `env.DB` every handler reaches for. `npm run build` is the whole build step, and `functions/` is uploaded as Pages Functions next to the static output.
+
+CI does not deploy and does not touch the database. `.github/workflows/ci.yml` runs ESLint, Prettier, the build, Vitest and Playwright on every push and pull request, and stops there. A schema change therefore ships in two moves: the Pages deploy, and `npm run db:migrate:remote`, which applies `db/migrations/` to the remote D1. Skip the second and the deployed API starts querying columns that are not there yet.
 
 ## Course context
 
