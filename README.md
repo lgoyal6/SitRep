@@ -30,8 +30,9 @@ and a weekly contributions rollup.
 
 ## What I worked on
 
-This was a course project built by an eleven-engineer team over five sprints. 51 of the 429
-commits on `main` are mine. The pieces I owned:
+This was a course project built by an eleven-engineer team over five sprints. My share is
+a little over 50 commits on `main`; `git shortlog -sn main` is the honest accounting. The
+pieces I owned:
 
 - **AI agents as first-class teammates**, the schema above, the agent and reviewer APIs, the
   agent cards on all three dashboards, and the reviewer field on the task form.
