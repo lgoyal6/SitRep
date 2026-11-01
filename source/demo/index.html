@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SitRep | Sample workspace</title>
+    <link rel="stylesheet" href="../shared/theme.css" />
+    <link rel="stylesheet" href="../task-card/task-card.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: clamp(18px, 4vw, 48px);
+        font-family: system-ui;
+        background: #f5f6fa;
+        color: #182035;
+      }
+      main {
+        max-width: 1150px;
+        margin: auto;
+      }
+      header,
+      nav {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      header a {
+        margin-left: auto;
+      }
+      h1 {
+        font-size: clamp(28px, 5vw, 44px);
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+      .column {
+        background: #e7ebf3;
+        padding: 14px;
+        border-radius: 14px;
+      }
+      .column article {
+        margin-bottom: 14px;
+      }
+      button,
+      select {
+        font: inherit;
+        padding: 9px;
+        border: 1px solid #aab5c7;
+        border-radius: 6px;
+      }
+      #summary {
+        padding: 20px 0;
+      }
+      #notice {
+        line-height: 1.6;
+        max-width: 80ch;
+      }
+    </style>
+    <script type="module" src="demo.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <strong>SitRep</strong><a href="../login/">Team sign-in</a
+        ><a href="https://github.com/lgoyal6/SitRep">GitHub</a>
+      </header>
+      <h1>See what your team needs next.</h1>
+      <p id="notice">
+        A fictional release team has a blocked task, unfinished work and a review waiting. Change
+        assignments, priorities and status using SitRep's original task cards. This sample is saved
+        only in this browser. It does not sync with a team or contact an AI service.
+      </p>
+      <nav>
+        <label for="method">Team method</label
+        ><select id="method">
+          <option value="kanban">Kanban</option>
+          <option value="scrum">Scrum</option>
+          <option value="xp">XP</option></select
+        ><button id="reset">Reset sample</button>
+      </nav>
+      <p id="summary" role="status"></p>
+      <div id="board" class="board"></div>
+    </main>
+  </body>
+</html>
